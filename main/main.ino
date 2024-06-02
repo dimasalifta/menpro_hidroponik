@@ -7,15 +7,15 @@ GravityTDS gravityTds;
 
 #include <Arduino.h>
 
-// //#include "util/OneWire_direct_gpio.h"
-// #include <OneWire.h>
-// #include <DallasTemperature.h>
-// // GPIO where the DS18B20 is connected to
-// #define oneWireBus 4
-// // Setup a oneWire instance to communicate with any OneWire devices
-// OneWire oneWire(oneWireBus);
-// // Pass our oneWire reference to Dallas Temperature sensor
-// DallasTemperature dsb(&oneWire);
+//#include "util/OneWire_direct_gpio.h"
+#include <OneWire.h>
+#include <DallasTemperature.h>
+// GPIO where the DS18B20 is connected to
+#define oneWireBus 4
+// Setup a oneWire instance to communicate with any OneWire devices
+OneWire oneWire(oneWireBus);
+// Pass our oneWire reference to Dallas Temperature sensor
+DallasTemperature dsb(&oneWire);
 
 const int phPin = 34; // Setup ph sensor pin
 
@@ -59,15 +59,15 @@ void readTDS() {
   Serial.println(" ppm");
 }
 
-// void readDSB() {
-//   dsb.requestTemperatures();
-//   float temperatureC = dsb.getTempCByIndex(0);
-//   float temperatureF = dsb.getTempFByIndex(0);
-//   Serial.print(temperatureC);
-//   Serial.println("ºC");
-//   Serial.print(temperatureF);
-//   Serial.println("ºF");
-// }
+void readDSB() {
+  dsb.requestTemperatures();
+  float temperatureC = dsb.getTempCByIndex(0);
+  float temperatureF = dsb.getTempFByIndex(0);
+  Serial.print(temperatureC);
+  Serial.println("ºC");
+  Serial.print(temperatureF);
+  Serial.println("ºF");
+}
 
 
 void readFLOW() {
@@ -114,7 +114,7 @@ void readFLOW() {
 void setup() {
   Serial.begin(115200);
   // Start the DS18B20 sensor
-  // dsb.begin();
+  dsb.begin();
   pinMode(phPin, INPUT);
   pinMode(flowPin, INPUT_PULLUP);
   gravityTds.setPin(tdsPin);
@@ -137,5 +137,5 @@ void loop() {
   readFLOW();
   connect_mqtt();
   send_mqtt();
-  // readDSB();
+  readDSB();
 }
