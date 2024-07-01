@@ -1,23 +1,18 @@
-#include <EEPROM.h>
-#include "GravityTDS.h"
-const int tdsPin = 35; // Setup tds sensor pin
-float temperature = 25, tds_value = 0;
-#define EEPROM_SIZE 512
-GravityTDS gravityTds;
+const int tdsPin = 12; // Setup tds sensor pin
 
 #include <Arduino.h>
 
-//#include "util/OneWire_direct_gpio.h"
-#include <OneWire.h>
-#include <DallasTemperature.h>
-// GPIO where the DS18B20 is connected to
-#define oneWireBus 4
-// Setup a oneWire instance to communicate with any OneWire devices
-OneWire oneWire(oneWireBus);
-// Pass our oneWire reference to Dallas Temperature sensor
-DallasTemperature dsb(&oneWire);
+// //#include "util/OneWire_direct_gpio.h"
+// #include <OneWire.h>
+// #include <DallasTemperature.h>
+// // GPIO where the DS18B20 is connected to
+// #define oneWireBus 4
+// // Setup a oneWire instance to communicate with any OneWire devices
+// OneWire oneWire(oneWireBus);
+// // Pass our oneWire reference to Dallas Temperature sensor
+// DallasTemperature dsb(&oneWire);
 
-const int phPin = 34; // Setup ph sensor pin
+const int phPin = 27; // Setup ph sensor pin
 
 // Setup waterflow sensor pin and variable
 #define flowPin  36 // Sensor pin
@@ -35,6 +30,7 @@ float flowLitres;
 float totalLitres;
 
 float ph_value;
+float tds_value;
 
 void IRAM_ATTR pulseCounter()
 {
@@ -45,29 +41,29 @@ void readPH() {
   float analog_ph_value = analogRead(phPin);
   Serial.print(analog_ph_value);
   Serial.print(" | ");
-  float voltage = analog_ph_value * (3.3 / 4095.0);// 3.3 for esp32
-  ph_value = (3.3 * voltage);
+  ph_value = ((0.0062*(analog_ph_value)) - 2.1421);
   Serial.print(ph_value);
   Serial.println(" pH");
 }
 
 void readTDS() {
-  gravityTds.setTemperature(temperature);  // set the temperature and execute temperature compensation
-  gravityTds.update();  //sample and calculate
-  tds_value = gravityTds.getTdsValue();  // then get the value
+  int tds_analog = analogRead(tdsPin);
+  tds_value =  (0.0005*(tds_analog*tds_analog) - 1.5179*(tds_analog) + 1416.9);  // then get the value
+  Serial.print(tds_analog);
+  Serial.print(" | ");
   Serial.print(tds_value);
   Serial.println(" ppm");
 }
 
-void readDSB() {
-  dsb.requestTemperatures();
-  float temperatureC = dsb.getTempCByIndex(0);
-  float temperatureF = dsb.getTempFByIndex(0);
-  Serial.print(temperatureC);
-  Serial.println("ºC");
-  Serial.print(temperatureF);
-  Serial.println("ºF");
-}
+// void readDSB() {
+//   dsb.requestTemperatures();
+//   float temperatureC = dsb.getTempCByIndex(0);
+//   float temperatureF = dsb.getTempFByIndex(0);
+//   Serial.print(temperatureC);
+//   Serial.println("ºC");
+//   Serial.print(temperatureF);
+//   Serial.println("ºF");
+// }
 
 
 void readFLOW() {
@@ -112,15 +108,13 @@ void readFLOW() {
   }
 }
 void setup() {
+  // connect_mqtt();
   Serial.begin(115200);
   // Start the DS18B20 sensor
-  dsb.begin();
+  // dsb.begin();
   pinMode(phPin, INPUT);
-  pinMode(flowPin, INPUT_PULLUP);
-  gravityTds.setPin(tdsPin);
-  gravityTds.setAref(3.3);  //reference voltage on ADC, default 3.3V on ESP32
-  gravityTds.setAdcRange(4096);  //1024 for 10bit ADC;4096 for 12bit ADC
-  gravityTds.begin();  //initialization
+  // pinMode(flowPin, INPUT_PULLUP);
+  pinMode(tdsPin, INPUT);
 
   pulseCount = 0;
   flowRate = 0.0;
@@ -135,7 +129,7 @@ void loop() {
   readPH();
   readTDS();
   readFLOW();
-  connect_mqtt();
   send_mqtt();
-  readDSB();
+  // readDSB();
+  delay(500);
 }
