@@ -1,4 +1,4 @@
-#define ph_pin 34
+#define ph_pin 32
 float ph_value;
  
 void setup() {

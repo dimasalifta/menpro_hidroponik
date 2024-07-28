@@ -1,21 +1,18 @@
-const int tdsPin = 12; // Setup tds sensor pin
-
 #include <Arduino.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
 
-// //#include "util/OneWire_direct_gpio.h"
-// #include <OneWire.h>
-// #include <DallasTemperature.h>
-// // GPIO where the DS18B20 is connected to
-// #define oneWireBus 4
-// // Setup a oneWire instance to communicate with any OneWire devices
-// OneWire oneWire(oneWireBus);
-// // Pass our oneWire reference to Dallas Temperature sensor
-// DallasTemperature dsb(&oneWire);
+#include <Wire.h>             // Include the Wire library for I2C
+#include <PCF8574.h>          // Include the PCF8574 library
+#define PCF8574_ADDRESS 0x20  // Replace with your PCF8574 I2C address
+#include "setup_mqtt.h"
 
-const int phPin = 27; // Setup ph sensor pin
+
+const int tdsPin = 34;  // Setup tds sensor pin
+const int phPin = 35;   // Setup ph sensor pin
 
 // Setup waterflow sensor pin and variable
-#define flowPin  36 // Sensor pin
+#define flowPin 4  // Sensor pin
 long currentMillis = 0;
 long previousMillis = 0;
 int interval = 1000;
@@ -32,44 +29,34 @@ float totalLitres;
 float ph_value;
 float tds_value;
 
-void IRAM_ATTR pulseCounter()
-{
+void IRAM_ATTR pulseCounter() {
   pulseCount++;
 }
 
-void readPH() {
+float readPH() {
   float analog_ph_value = analogRead(phPin);
   Serial.print(analog_ph_value);
   Serial.print(" | ");
-  ph_value = ((0.0062*(analog_ph_value)) - 2.1421);
+  ph_value = ((0.0062 * (analog_ph_value)) - 2.1421);
   Serial.print(ph_value);
   Serial.println(" pH");
+  return ph_value;
 }
 
-void readTDS() {
-  int tds_analog = analogRead(tdsPin);
-  tds_value =  (0.0005*(tds_analog*tds_analog) - 1.5179*(tds_analog) + 1416.9);  // then get the value
+float readTDS() {
+  float tds_analog = analogRead(tdsPin);
+  tds_value = (0.0005 * (tds_analog * tds_analog) - 1.5179 * (tds_analog) + 1416.9);  // then get the value
   Serial.print(tds_analog);
   Serial.print(" | ");
   Serial.print(tds_value);
   Serial.println(" ppm");
+  return tds_value;
 }
 
-// void readDSB() {
-//   dsb.requestTemperatures();
-//   float temperatureC = dsb.getTempCByIndex(0);
-//   float temperatureF = dsb.getTempFByIndex(0);
-//   Serial.print(temperatureC);
-//   Serial.println("ºC");
-//   Serial.print(temperatureF);
-//   Serial.println("ºF");
-// }
 
-
-void readFLOW() {
+float readFLOW() {
   currentMillis = millis();
-  if (currentMillis - previousMillis > interval)
-  {
+  if (currentMillis - previousMillis > interval) {
 
     pulse1Sec = pulseCount;
     pulseCount = 0;
@@ -96,7 +83,7 @@ void readFLOW() {
     Serial.print("Flow rate: ");
     Serial.print(float(flowRate));  // Print the integer part of the variable
     Serial.print("L/min");
-    Serial.print("\t");       // Print tab space
+    Serial.print("\t");  // Print tab space
 
     // Print the cumulative total of litres flowed since starting
     Serial.print("Output Liquid Quantity: ");
@@ -104,16 +91,42 @@ void readFLOW() {
     Serial.print("mL / ");
     Serial.print(totalLitres);
     Serial.println("L");
-
+  }
+  return float(flowRate);
+}
+void reconnect() {
+  // Loop until we're reconnected
+  while (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Attempt to connect
+    if (client.connect("arduinoClient")) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      client.publish("LEMIGAS", "reconnect");
+      // ... and resubscribe
+      // client.subscribe("#");
+      client.subscribe("phup/relay");
+      client.subscribe("phdown/relay");
+      client.subscribe("nuta/relay");
+      client.subscribe("nutb/relay");
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      delay(5000);
+    }
   }
 }
 void setup() {
-  // connect_mqtt();
   Serial.begin(115200);
-  // Start the DS18B20 sensor
-  // dsb.begin();
+  relay_begin();
+  connect_mqtt();
+  client.setCallback(callback);
+
+
   pinMode(phPin, INPUT);
-  // pinMode(flowPin, INPUT_PULLUP);
+  pinMode(flowPin, INPUT_PULLUP);
   pinMode(tdsPin, INPUT);
 
   pulseCount = 0;
@@ -123,13 +136,21 @@ void setup() {
   previousMillis = 0;
 
   attachInterrupt(digitalPinToInterrupt(flowPin), pulseCounter, FALLING);
+  client.subscribe("phup/relay");
+  client.subscribe("phdown/relay");
+  client.subscribe("nuta/relay");
+  client.subscribe("nutb/relay");
   delay(1000);
 }
 void loop() {
-  readPH();
-  readTDS();
-  readFLOW();
-  send_mqtt();
-  // readDSB();
-  delay(500);
+  if (!client.connected()) {
+    reconnect();
+  }
+
+  // readPH();
+  // readTDS();
+  // readFLOW();
+  send_mqtt(readPH(), readTDS(), readFLOW());
+  delay(1000);
+  client.loop();
 }
