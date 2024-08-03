@@ -2,11 +2,27 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
+// GPIO where the DS18B20 is connected to
+const int oneWireBus = 33;
+
+// Setup a oneWire instance to communicate with any OneWire devices
+OneWire oneWire(oneWireBus);
+
+// Pass our oneWire reference to Dallas Temperature sensor
+DallasTemperature sensors(&oneWire);
+
 #include <Wire.h>             // Include the Wire library for I2C
 #include <PCF8574.h>          // Include the PCF8574 library
 #define PCF8574_ADDRESS 0x20  // Replace with your PCF8574 I2C address
 #include "setup_mqtt.h"
 
+#include <DHT.h>
+#define DHT22_PIN 32
+
+DHT dht22(DHT22_PIN, DHT22);
 
 const int tdsPin = 34;  // Setup tds sensor pin
 const int phPin = 35;   // Setup ph sensor pin
@@ -43,6 +59,17 @@ float readPH() {
   return ph_value;
 }
 
+float readDSB() {
+  sensors.requestTemperatures();
+  float temperatureC = sensors.getTempCByIndex(0);
+  // float temperatureF = sensors.getTempFByIndex(0);
+  Serial.print(temperatureC);
+  Serial.println("ºC");
+  // Serial.print(temperatureF);
+  // Serial.println("ºF");
+  return temperatureC;
+}
+
 float readTDS() {
   float tds_analog = analogRead(tdsPin);
   tds_value = (0.0005 * (tds_analog * tds_analog) - 1.5179 * (tds_analog) + 1416.9);  // then get the value
@@ -53,6 +80,37 @@ float readTDS() {
   return tds_value;
 }
 
+float readDHTtempC() {
+  float tempC = dht22.readTemperature();
+  Serial.print("Temperature: ");
+  Serial.print(tempC);
+  return tempC;
+}
+
+float readDHThumi() {
+  // read humidity
+  float humi = dht22.readHumidity();
+  // // read temperature in Celsius
+  // float tempC = dht22.readTemperature();
+  // // read temperature in Fahrenheit
+  // float tempF = dht22.readTemperature(true);
+
+  // check whether the reading is successful or not
+  // if (isnan(tempC) || isnan(tempF) || isnan(humi)) {
+  //   Serial.println("Failed to read from DHT22 sensor!");
+  // } else {
+  Serial.print("Humidity: ");
+  Serial.print(humi);
+  //   Serial.print("%");
+
+  //   Serial.print("  |  ");
+
+  // Serial.print("Temperature: ");
+  // Serial.print(tempC);
+  //   Serial.println("°C");
+  // }
+  return humi;
+}
 
 float readFLOW() {
   currentMillis = millis();
@@ -118,11 +176,14 @@ void reconnect() {
     }
   }
 }
+
 void setup() {
   Serial.begin(115200);
   relay_begin();
   connect_mqtt();
   client.setCallback(callback);
+  dht22.begin();
+  sensors.begin();
 
 
   pinMode(phPin, INPUT);
@@ -142,15 +203,15 @@ void setup() {
   client.subscribe("nutb/relay");
   delay(1000);
 }
+
 void loop() {
   if (!client.connected()) {
     reconnect();
   }
-
   // readPH();
   // readTDS();
   // readFLOW();
-  send_mqtt(readPH(), readTDS(), readFLOW());
+  send_mqtt(readPH(), readTDS(), readFLOW(), readDHThumi(), readDSB(), readDHTtempC());
   delay(1000);
   client.loop();
 }
