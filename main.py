@@ -5,121 +5,118 @@ import paho.mqtt.client as mqtt
 import asyncio
 import multiprocessing
 import json
+import time
 
 MQTT_BROKER = os.getenv("MQTT_BROKER")
 MQTT_PORT = os.getenv("MQTT_PORT")
 # MQTT_USERNAME = os.getenv("MQTT_USERNAME")
 # MQTT_PASSWORD = os.getenv("MQTT_PASSWORD")
 MQTT_TOPIC = os.getenv("MQTT_TOPIC")
+ph_value = None
+tds_value = None
 class SistemFuzzy:
-    def __init__(self, kelembaban, amoniak):
-        self.kelembaban = kelembaban
-        self.amoniak = amoniak
-        self.basah = 0
-        self.lembab = 0
-        self.kering = 0
-        self.normal = 0
-        self.sedang = 0
-        self.tinggi = 0
+    def __init__(self, ph, tds):
+        self.ph = ph
+        self.tds = tds
+        self.ph_rendah = 0
+        self.ph_normal = 0
+        self.ph_tinggi = 0
+        self.tds_rendah = 0
+        self.tds_normal = 0
+        self.tds_tinggi = 0
         self.hasil = ""
 
-    def kelembaban_basah(self):
-        if self.kelembaban <= 65:
-            self.basah = 0
-        elif 65 < self.kelembaban < 85:
-            self.basah = (self.kelembaban-65) / 20
-        elif self.kelembaban >= 85:
-            self.basah = 1
-        return self.basah
+    def xph_rendah(self):
+        # print(self.ph)
+        if self.ph <= 5.5:
+            self.ph_rendah = 1
+        elif self.ph > 5.5:
+            self.ph_rendah = 0
 
-    def kelembaban_lembab(self):
-        if self.kelembaban <= 25:
-            self.lembab = 0
-        elif 25 <= self.kelembaban <= 45:
-            self.lembab = (self.kelembaban - 25) / 20
-        elif 65 < self.kelembaban <= 85:
-            self.lembab = (85 - self.kelembaban) / 20
-        elif 45 <= self.kelembaban <= 65:
-            self.lembab = 1
-        return self.lembab
+        return self.ph_rendah
 
-    def kelembaban_kering(self):
-        if self.kelembaban <= 25:
-            self.kering = 1
-        elif 25 < self.kelembaban < 45:
-            self.kering = (45-self.kelembaban) / 20
-        elif self.kelembaban >= 45:
-            self.kering = 0
-        return self.kering
+    def xph_normal(self):
+        if self.ph < 5.5:
+            self.ph_normal = 0
+        elif 5.5 <= self.ph <= 6.5:
+            self.ph_normal = (self.ph - 5.5) / 1
+        elif self.ph > 6.5:
+            self.ph_normal = 0
+        return self.ph_normal
 
-    def amoniak_normal(self):
-        if self.amoniak <= 20:
-            self.normal = 1
-        elif 20 < self.amoniak < 30:
-            self.normal = (30-self.amoniak) / 10
-        elif self.amoniak >= 30:
-            self.normal = 0
-        return self.normal
+    def xph_tinggi(self):
+        if self.ph <= 6.5:
+            self.ph_tinggi = 0
+        elif self.ph > 6.5:
+            self.ph_tinggi = 1
+        return self.ph_tinggi
 
-    def amoniak_sedang(self):
-        if self.amoniak <= 20 or self.amoniak >= 60:
-            self.sedang = 0
-        elif 20 <= self.amoniak <= 30:
-            self.sedang = (self.amoniak - 20) / 10
-        elif 50 < self.amoniak <= 60:
-            self.sedang = (60 - self.amoniak) / 10
-        elif 30 <= self.amoniak <= 50:
-            self.sedang = 1
-        return self.sedang
+    def ytds_rendah(self):
+        if self.tds <= 1050:
+            self.tds_rendah = 1
+        elif self.tds > 1050:
+            self.tds_rendah = 0
+        return self.tds_rendah
 
-    def amoniak_tinggi(self):
-        if self.amoniak >= 60:
-            self.tinggi = 1
-        elif 50 < self.amoniak < 60:
-            self.tinggi = (self.amoniak - 50) / 10
-        elif self.amoniak <= 50:
-            self.tinggi = 0
-        return self.tinggi
+    def ytds_normal(self):
+        if self.tds <= 1050:
+            self.tds_normal = 0
+        elif 1050 <= self.tds <= 1400:
+            self.tds_normal = (self.tds - 1050) / 350
+        elif self.tds > 1400:
+            self.tds_normal = 0
+        return self.tds_normal
+
+    def ytds_tinggi(self):
+        if self.tds <= 1400:
+            self.tds_tinggi = 0
+        elif self.tds > 1400:
+            self.tds_tinggi = 1
+        return self.tds_tinggi
 
     def fuzzifikasi(self):
-        self.kelembaban_basah()
-        self.kelembaban_lembab()
-        self.kelembaban_kering()
-        self.amoniak_normal()
-        self.amoniak_sedang()
-        self.amoniak_tinggi()
+        # print("test")
+        self.xph_rendah()
+        self.xph_normal()
+        self.xph_tinggi()
+        self.ytds_rendah()
+        self.ytds_normal()
+        self.ytds_tinggi()
         
+        # print(self.ph_rendah())
         fuzzyfikasi_data = {
-            "kering":self.kering,
-            "lembab":self.lembab,
-            "basah":self.basah,
-            "normal":self.normal,
-            "sedang":self.sedang,
-            "tinggi":self.tinggi,
+            "ph_rendah":self.ph_rendah,
+            "ph_normal":self.ph_normal,
+            "ph_tinggi":self.ph_tinggi,
+            "tds_rendah":self.tds_rendah,
+            "tds_normal":self.tds_normal,
+            "tds_tinggi":self.tds_tinggi
         }
         fuzzyfikasi_data = json.dumps(fuzzyfikasi_data,indent=4)
-        # print(f"basah: {self.basah}\tlembab: {self.lembab}\tkering: {self.kering}")
-        # print(f"Normal: {self.normal}\tsedang: {self.sedang}\tTinggi: {self.tinggi}")
+        # print(fuzzyfikasi_data)
+        print(f"ph_rendah: {self.ph_rendah}\tph_normal: {self.ph_normal}\tph_tinggi: {self.ph_tinggi}")
+        print(f"tds_rendah: {self.tds_rendah}\ttds_normal: {self.tds_normal}\ttds_tinggi: {self.tds_tinggi}")
         return fuzzyfikasi_data
+
     def inference(self):
-        if self.normal >= 0.5 and self.kering >= 0.5:
-            self.hasil = "AMAN"
-        elif self.normal >= 0.5 and self.lembab >= 0.5:
-            self.hasil = "AMAN"
-        elif self.sedang >= 0.5 and self.kering >= 0.5:
-            self.hasil = "AMAN"
-        elif self.normal >= 0.5 and self.basah >= 0.5:
-            self.hasil = "WASPADA"
-        elif self.sedang >= 0.5 and self.lembab >= 0.5:
-            self.hasil = "WASPADA"
-        elif self.tinggi >= 0.5 and self.kering >= 0.5:
-            self.hasil = "WASPADA"
-        elif self.sedang >= 0.5 and self.basah >= 0.5:
-            self.hasil = "BAHAYA"
-        elif self.tinggi >= 0.5 and self.lembab >= 0.5:
-            self.hasil = "BAHAYA"
-        elif self.tinggi >= 0.5 and self.basah >= 0.5:
-            self.hasil = "BAHAYA"
+        if self.ph_rendah >= 0.5 and self.tds_rendah >= 0.5:
+            self.hasil = "SAKIT"
+        elif self.ph_rendah >= 0.5 and self.tds_normal >= 0.5:
+            self.hasil = "STRES"
+        elif self.ph_rendah >= 0.5 and self.tds_tinggi >= 0.5:
+            self.hasil = "STRES"
+        elif self.ph_normal >= 0.5 and self.tds_rendah >= 0.5:
+            self.hasil = "STRES"
+        elif self.ph_normal >= 0.5 and self.tds_normal >= 0.5:
+            self.hasil = "SEHAT"
+        elif self.ph_normal >= 0.5 and self.tds_tinggi >= 0.5:
+            self.hasil = "STRES"
+        elif self.ph_tinggi >= 0.5 and self.tds_rendah >= 0.5:
+            self.hasil = "STRES"
+        elif self.ph_tinggi >= 0.5 and self.tds_normal >= 0.5:
+            self.hasil = "STRES"
+        elif self.ph_tinggi >= 0.5 and self.tds_tinggi >= 0.5:
+            self.hasil = "SAKIT"
         else:
             self.hasil = "TIDAK TERDEFINISI"
         status = {
@@ -149,7 +146,8 @@ def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to broker")
         client.publish("AIS","Launched...!!!")  # Subscribe ke topik "topic/test"
-        client.subscribe(MQTT_TOPIC)  # Subscribe ke topik "topic/test"
+        client.subscribe("tds_sensor")
+        client.subscribe("ph_sensor")
     else:
         print("Connection failed")
         
@@ -157,28 +155,43 @@ def on_connect(client, userdata, flags, rc):
 def on_message(client, userdata, msg):
     # print("Received message on topic:", msg.topic)
     try:
-        
+        global ph_value,tds_value
         # print("Received JSON payload:")
+        topic = msg.topic
         payload = msg.payload.decode()
-        print(payload)
-        data = json.loads(payload)
+        # print(type(topic))
         
-        temperature = data.get('temperature')
-        humidity = data.get('humidity')
-        ammonia = data.get('ammonia')
-        client.publish('ais/temperature',temperature)
-        client.publish('ais/humidity',humidity)
-        client.publish('ais/ammonia',ammonia)
-        sistem_fuzzy = SistemFuzzy(kelembaban=humidity, amoniak=ammonia)  # Atur beberapa nilai tes
+        if topic == 'ph_sensor':
+            ph_value = payload
+        elif topic == 'tds_sensor':
+            tds_value = payload
         
-        client.publish("ais/fuzzyfication",sistem_fuzzy.fuzzifikasi())
-        client.publish("ais/inference",sistem_fuzzy.inference())
-        nilai_crisp_kelembaban,nilai_crisp_amoniak = sistem_fuzzy.defuzzifikasi()
-        client.publish("ais/defuzzyfication/kelembaban",nilai_crisp_kelembaban)
-        client.publish("ais/defuzzyfication/ammonia",nilai_crisp_amoniak)
+        ph_value = float(ph_value)
+        tds_value = float(tds_value)
+        print(f'Data pH:{ph_value} | TDS:{tds_value}')
+        # data = json.loads(payload)
+        
+        # temperature = data.get('temperature')
+        # humidity = data.get('humidity')
+        # ammonia = data.get('ammonia')
+        # client.publish('ais/temperature',temperature)
+        # client.publish('ais/humidity',humidity)
+        # client.publish('ais/ammonia',ammonia)
+        
+        sistem_fuzzy = SistemFuzzy(3, 700)  # Atur beberapa nilai tes
+        print(sistem_fuzzy.fuzzifikasi())
+        print(sistem_fuzzy.inference())
+        # client.publish("ais/fuzzyfication",sistem_fuzzy.fuzzifikasi())
+        client.publish("inference_fuzzy",sistem_fuzzy.inference())
+        # nilai_crisp_kelembaban,nilai_crisp_amoniak = sistem_fuzzy.defuzzifikasi()
+        # client.publish("ais/defuzzyfication/kelembaban",nilai_crisp_kelembaban)
+        # client.publish("ais/defuzzyfication/ammonia",nilai_crisp_amoniak)
+        print("++++++++++++++++++++++++++++++++++++++++++++")
+        time.sleep(5)
     except Exception as e:
         # Jika payload tidak bisa diuraikan sebagai JSON, cetak sebagai string biasa
         print(f"Received String Payload: {e}", msg.payload)
+        pass
         
 def mqtt_process():
     client = mqtt.Client()
