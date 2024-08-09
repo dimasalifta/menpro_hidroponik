@@ -125,8 +125,8 @@ class SistemFuzzy:
         }
         fuzzyfikasi_data = json.dumps(fuzzyfikasi_data,indent=4)
         # print(fuzzyfikasi_data)
-        print(f"ph_rendah: {self.ph_rendah}\tph_normal: {self.ph_normal}\tph_tinggi: {self.ph_tinggi}")
-        print(f"tds_rendah: {self.tds_rendah}\ttds_normal: {self.tds_normal}\ttds_tinggi: {self.tds_tinggi}")
+        # print(f"ph_rendah: {self.ph_rendah}\tph_normal: {self.ph_normal}\tph_tinggi: {self.ph_tinggi}")
+        # print(f"tds_rendah: {self.tds_rendah}\ttds_normal: {self.tds_normal}\ttds_tinggi: {self.tds_tinggi}")
         return fuzzyfikasi_data
 
     def inference(self):
@@ -158,25 +158,25 @@ class SistemFuzzy:
         return status_json
         # print(f"HASIL: {status_json}")
     def defuzzifikasi(self):
-        centroid_kering = 10  # Centroid untuk himpunan kering (berdasarkan kelembaban)
-        centroid_lembab = 55  # Centroid untuk himpunan lembab (berdasarkan kelembaban)
-        centroid_basah = 92.5  # Centroid untuk himpunan basah (berdasarkan kelembaban)
+        centroid_ph_rendah = 2.75  
+        centroid_ph_normal = 6  
+        centroid_ph_tinggi = 10.25 
 
-        centroid_normal = 10  # Centroid untuk himpunan normal (berdasarkan amoniak)
-        centroid_sedang = 35  # Centroid untuk himpunan sedang (berdasarkan amoniak)
-        centroid_tinggi = 75  # Centroid untuk himpunan tinggi (berdasarkan amoniak)
-        # print(self.basah + self.lembab + self.kering)
+        centroid_tds_rendah = 525  
+        centroid_tds_normal = 1225  
+        centroid_tds_tinggi = 1700
+
         # Hitung nilai crisp dengan metode centroid
-        nilai_crisp_kelembaban = (self.basah * centroid_basah + self.lembab * centroid_lembab + self.kering * centroid_kering) / (
-                    self.basah + self.lembab + self.kering)
-        nilai_crisp_amoniak = (self.normal * centroid_normal + self.sedang * centroid_sedang + self.tinggi * centroid_tinggi) / (
-                    self.normal + self.sedang + self.tinggi)
+        nilai_crisp_ph = (self.ph_tinggi * centroid_ph_tinggi + self.ph_normal * centroid_ph_normal + self.ph_rendah * centroid_ph_rendah) / (
+                    self.ph_tinggi + self.ph_normal + self.ph_rendah)
+        nilai_crisp_tds = (self.tds_rendah * centroid_tds_rendah + self.tds_normal * centroid_tds_normal + self.tds_tinggi * centroid_tds_tinggi) / (
+                    self.tds_rendah + self.tds_normal + self.tds_tinggi)
 
-        return nilai_crisp_kelembaban,nilai_crisp_amoniak   
+        return nilai_crisp_ph,nilai_crisp_tds   
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to broker")
-        client.publish("AIS","Launched...!!!")  # Subscribe ke topik "topic/test"
+        client.publish("menpro fuzzy","Launched...!!!")  # Subscribe ke topik "topic/test"
         client.subscribe("tds_sensor")
         client.subscribe("ph_sensor")
     else:
@@ -200,25 +200,17 @@ def on_message(client, userdata, msg):
         ph_value = float(ph_value)
         tds_value = float(tds_value)
         print(f'Data pH:{ph_value} | TDS:{tds_value}')
-        # data = json.loads(payload)
-        
-        # temperature = data.get('temperature')
-        # humidity = data.get('humidity')
-        # ammonia = data.get('ammonia')
-        # client.publish('ais/temperature',temperature)
-        # client.publish('ais/humidity',humidity)
-        # client.publish('ais/ammonia',ammonia)
         
         sistem_fuzzy = SistemFuzzy(ph_value, tds_value)  # Atur beberapa nilai tes
-        print(sistem_fuzzy.fuzzifikasi())
-        print(sistem_fuzzy.inference())
-        # client.publish("ais/fuzzyfication",sistem_fuzzy.fuzzifikasi())
-        client.publish("inference_fuzzy",sistem_fuzzy.inference())
-        # nilai_crisp_kelembaban,nilai_crisp_amoniak = sistem_fuzzy.defuzzifikasi()
-        # client.publish("ais/defuzzyfication/kelembaban",nilai_crisp_kelembaban)
-        # client.publish("ais/defuzzyfication/ammonia",nilai_crisp_amoniak)
-        print("++++++++++++++++++++++++++++++++++++++++++++")
-        time.sleep(5)
+        result_fuzzifikasi = sistem_fuzzy.fuzzifikasi()
+        result_inference = sistem_fuzzy.inference()
+        nilai_crisp_ph,nilai_tds = sistem_fuzzy.defuzzifikasi()
+        
+        client.publish("menpro/fuzzy/fuzzifikasi",result_fuzzifikasi)
+        client.publish("menpro/fuzzy/inference_fuzzy",result_inference)
+        client.publish("menpro/fuzzy/nilai_crisp_ph",nilai_crisp_ph)
+        client.publish("menpro/fuzzy/nilai_crisp_tds",nilai_tds)
+        print("")
     except Exception as e:
         # Jika payload tidak bisa diuraikan sebagai JSON, cetak sebagai string biasa
         print(f"Received String Payload: {e}", msg.payload)
