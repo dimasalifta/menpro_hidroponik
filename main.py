@@ -26,62 +26,93 @@ class SistemFuzzy:
         self.tds_tinggi = 0
         self.hasil = ""
 
-    def xph_rendah(self):
-        # print(self.ph)
-        if self.ph <= 5.5:
-            self.ph_rendah = 1
-        elif self.ph > 5.5:
+    def xph_rendah(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.ph < a or self.ph > d:
             self.ph_rendah = 0
+        elif self.ph >= a and self.ph < b:
+            self.ph_rendah = (self.ph - a) / (b - a)
+        elif self.ph > c and self.ph < d:
+            self.ph_rendah = (d - self.ph) / (d - c)
+        elif self.ph >= b and self.ph <= c: 
+            self.ph_rendah = 1
 
         return self.ph_rendah
 
-    def xph_normal(self):
-        if self.ph < 5.5:
+    def xph_normal(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.ph < a or self.ph > d:
             self.ph_normal = 0
-        elif 5.5 <= self.ph <= 6.5:
-            self.ph_normal = (self.ph - 5.5) / 1
-        elif self.ph > 6.5:
-            self.ph_normal = 0
+        elif self.ph >= a and self.ph < b:
+            self.ph_normal = (self.ph - a) / (b - a)
+        elif self.ph > c and self.ph < d:
+            self.ph_normal = (d - self.ph) / (d - c)
+        elif self.ph >= b and self.ph <= c: 
+            self.ph_normal = 1
+        
         return self.ph_normal
 
-    def xph_tinggi(self):
-        if self.ph <= 6.5:
+    def xph_tinggi(self,a,b,c,d): #6.5, 6.5, 14.0, 14.0
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.ph < a or self.ph > d:
             self.ph_tinggi = 0
-        elif self.ph > 6.5:
+        elif self.ph >= a and self.ph < b:
+            self.ph_tinggi = (self.ph - a) / (b - a)
+        elif self.ph > c and self.ph < d:
+            self.ph_tinggi = (d - self.ph) / (d - c)
+        elif self.ph >= b and self.ph <= c: 
             self.ph_tinggi = 1
+        
         return self.ph_tinggi
 
-    def ytds_rendah(self):
-        if self.tds <= 1050:
-            self.tds_rendah = 1
-        elif self.tds > 1050:
+    def ytds_rendah(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.tds < a or self.tds > d:
             self.tds_rendah = 0
+        elif self.tds >= a and self.tds < b:
+            self.tds_rendah = (self.tds - a) / (b - a)
+        elif self.tds > c and self.tds < d:
+            self.tds_rendah = (d - self.tds) / (d - c)
+        elif self.tds >= b and self.tds <= c: 
+            self.tds_rendah = 1
+        
         return self.tds_rendah
 
-    def ytds_normal(self):
-        if self.tds <= 1050:
+    def ytds_normal(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.tds < a or self.tds > d:
             self.tds_normal = 0
-        elif 1050 <= self.tds <= 1400:
-            self.tds_normal = (self.tds - 1050) / 350
-        elif self.tds > 1400:
-            self.tds_normal = 0
+        elif self.tds >= a and self.tds < b:
+            self.tds_normal = (self.tds - a) / (b - a)
+        elif self.tds > c and self.tds < d:
+            self.tds_normal = (d - self.tds) / (d - c)
+        elif self.tds >= b and self.tds <= c: 
+            self.tds_normal = 1
+        
         return self.tds_normal
 
-    def ytds_tinggi(self):
-        if self.tds <= 1400:
+    def ytds_tinggi(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.tds < a or self.tds > d:
             self.tds_tinggi = 0
-        elif self.tds > 1400:
+        elif self.tds >= a and self.tds < b:
+            self.tds_tinggi = (self.tds - a) / (b - a)
+        elif self.tds > c and self.tds < d:
+            self.tds_tinggi = (d - self.tds) / (d - c)
+        elif self.tds >= b and self.tds <= c: 
             self.tds_tinggi = 1
+            
         return self.tds_tinggi
 
+    
     def fuzzifikasi(self):
         # print("test")
-        self.xph_rendah()
-        self.xph_normal()
-        self.xph_tinggi()
-        self.ytds_rendah()
-        self.ytds_normal()
-        self.ytds_tinggi()
+        self.xph_rendah(0, 0, 5.5, 5.5)
+        self.xph_normal(5.5, 5.5, 6.5, 6.5)
+        self.xph_tinggi(6.5, 6.5, 14.0, 14.0)
+        self.ytds_rendah(0, 0, 1050, 1050)
+        self.ytds_normal(1050, 1050, 1400, 1400)
+        self.ytds_tinggi(1400, 1400, 2000, 2000)
         
         # print(self.ph_rendah())
         fuzzyfikasi_data = {
@@ -178,7 +209,7 @@ def on_message(client, userdata, msg):
         # client.publish('ais/humidity',humidity)
         # client.publish('ais/ammonia',ammonia)
         
-        sistem_fuzzy = SistemFuzzy(3, 700)  # Atur beberapa nilai tes
+        sistem_fuzzy = SistemFuzzy(ph_value, tds_value)  # Atur beberapa nilai tes
         print(sistem_fuzzy.fuzzifikasi())
         print(sistem_fuzzy.inference())
         # client.publish("ais/fuzzyfication",sistem_fuzzy.fuzzifikasi())
