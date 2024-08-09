@@ -177,8 +177,8 @@ def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to broker")
         client.publish("menpro fuzzy","Launched...!!!")  # Subscribe ke topik "topic/test"
-        client.subscribe("tds_sensor")
-        client.subscribe("ph_sensor")
+        client.subscribe("menpro/esp32/ph_sensor")
+        client.subscribe("menpro/esp32/tds_sensor")
     else:
         print("Connection failed")
         
@@ -192,9 +192,9 @@ def on_message(client, userdata, msg):
         payload = msg.payload.decode()
         # print(type(topic))
         
-        if topic == 'ph_sensor':
+        if topic == 'menpro/esp32/ph_sensor':
             ph_value = payload
-        elif topic == 'tds_sensor':
+        elif topic == 'menpro/esp32/tds_sensor':
             tds_value = payload
         
         ph_value = float(ph_value)
