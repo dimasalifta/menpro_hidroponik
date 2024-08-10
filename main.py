@@ -26,62 +26,93 @@ class SistemFuzzy:
         self.tds_tinggi = 0
         self.hasil = ""
 
-    def xph_rendah(self):
-        # print(self.ph)
-        if self.ph <= 5.5:
-            self.ph_rendah = 1
-        elif self.ph > 5.5:
+    def xph_rendah(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.ph < a or self.ph > d:
             self.ph_rendah = 0
+        elif self.ph >= a and self.ph < b:
+            self.ph_rendah = (self.ph - a) / (b - a)
+        elif self.ph > c and self.ph < d:
+            self.ph_rendah = (d - self.ph) / (d - c)
+        elif self.ph >= b and self.ph <= c: 
+            self.ph_rendah = 1
 
         return self.ph_rendah
 
-    def xph_normal(self):
-        if self.ph < 5.5:
+    def xph_normal(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.ph < a or self.ph > d:
             self.ph_normal = 0
-        elif 5.5 <= self.ph <= 6.5:
-            self.ph_normal = (self.ph - 5.5) / 1
-        elif self.ph > 6.5:
-            self.ph_normal = 0
+        elif self.ph >= a and self.ph < b:
+            self.ph_normal = (self.ph - a) / (b - a)
+        elif self.ph > c and self.ph < d:
+            self.ph_normal = (d - self.ph) / (d - c)
+        elif self.ph >= b and self.ph <= c: 
+            self.ph_normal = 1
+        
         return self.ph_normal
 
-    def xph_tinggi(self):
-        if self.ph <= 6.5:
+    def xph_tinggi(self,a,b,c,d): #6.5, 6.5, 14.0, 14.0
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.ph < a or self.ph > d:
             self.ph_tinggi = 0
-        elif self.ph > 6.5:
+        elif self.ph >= a and self.ph < b:
+            self.ph_tinggi = (self.ph - a) / (b - a)
+        elif self.ph > c and self.ph < d:
+            self.ph_tinggi = (d - self.ph) / (d - c)
+        elif self.ph >= b and self.ph <= c: 
             self.ph_tinggi = 1
+        
         return self.ph_tinggi
 
-    def ytds_rendah(self):
-        if self.tds <= 1050:
-            self.tds_rendah = 1
-        elif self.tds > 1050:
+    def ytds_rendah(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.tds < a or self.tds > d:
             self.tds_rendah = 0
+        elif self.tds >= a and self.tds < b:
+            self.tds_rendah = (self.tds - a) / (b - a)
+        elif self.tds > c and self.tds < d:
+            self.tds_rendah = (d - self.tds) / (d - c)
+        elif self.tds >= b and self.tds <= c: 
+            self.tds_rendah = 1
+        
         return self.tds_rendah
 
-    def ytds_normal(self):
-        if self.tds <= 1050:
+    def ytds_normal(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.tds < a or self.tds > d:
             self.tds_normal = 0
-        elif 1050 <= self.tds <= 1400:
-            self.tds_normal = (self.tds - 1050) / 350
-        elif self.tds > 1400:
-            self.tds_normal = 0
+        elif self.tds >= a and self.tds < b:
+            self.tds_normal = (self.tds - a) / (b - a)
+        elif self.tds > c and self.tds < d:
+            self.tds_normal = (d - self.tds) / (d - c)
+        elif self.tds >= b and self.tds <= c: 
+            self.tds_normal = 1
+        
         return self.tds_normal
 
-    def ytds_tinggi(self):
-        if self.tds <= 1400:
+    def ytds_tinggi(self,a,b,c,d):
+        """Menghitung derajat keanggotaan trapezoidal."""
+        if self.tds < a or self.tds > d:
             self.tds_tinggi = 0
-        elif self.tds > 1400:
+        elif self.tds >= a and self.tds < b:
+            self.tds_tinggi = (self.tds - a) / (b - a)
+        elif self.tds > c and self.tds < d:
+            self.tds_tinggi = (d - self.tds) / (d - c)
+        elif self.tds >= b and self.tds <= c: 
             self.tds_tinggi = 1
+            
         return self.tds_tinggi
 
+    
     def fuzzifikasi(self):
         # print("test")
-        self.xph_rendah()
-        self.xph_normal()
-        self.xph_tinggi()
-        self.ytds_rendah()
-        self.ytds_normal()
-        self.ytds_tinggi()
+        self.xph_rendah(0, 0, 5.5, 5.5)
+        self.xph_normal(5.5, 5.5, 6.5, 6.5)
+        self.xph_tinggi(6.5, 6.5, 14.0, 14.0)
+        self.ytds_rendah(0, 0, 1050, 1050)
+        self.ytds_normal(1050, 1050, 1400, 1400)
+        self.ytds_tinggi(1400, 1400, 2000, 2000)
         
         # print(self.ph_rendah())
         fuzzyfikasi_data = {
@@ -94,8 +125,8 @@ class SistemFuzzy:
         }
         fuzzyfikasi_data = json.dumps(fuzzyfikasi_data,indent=4)
         # print(fuzzyfikasi_data)
-        print(f"ph_rendah: {self.ph_rendah}\tph_normal: {self.ph_normal}\tph_tinggi: {self.ph_tinggi}")
-        print(f"tds_rendah: {self.tds_rendah}\ttds_normal: {self.tds_normal}\ttds_tinggi: {self.tds_tinggi}")
+        # print(f"ph_rendah: {self.ph_rendah}\tph_normal: {self.ph_normal}\tph_tinggi: {self.ph_tinggi}")
+        # print(f"tds_rendah: {self.tds_rendah}\ttds_normal: {self.tds_normal}\ttds_tinggi: {self.tds_tinggi}")
         return fuzzyfikasi_data
 
     def inference(self):
@@ -127,27 +158,27 @@ class SistemFuzzy:
         return status_json
         # print(f"HASIL: {status_json}")
     def defuzzifikasi(self):
-        centroid_kering = 10  # Centroid untuk himpunan kering (berdasarkan kelembaban)
-        centroid_lembab = 55  # Centroid untuk himpunan lembab (berdasarkan kelembaban)
-        centroid_basah = 92.5  # Centroid untuk himpunan basah (berdasarkan kelembaban)
+        centroid_ph_rendah = 2.75  
+        centroid_ph_normal = 6  
+        centroid_ph_tinggi = 10.25 
 
-        centroid_normal = 10  # Centroid untuk himpunan normal (berdasarkan amoniak)
-        centroid_sedang = 35  # Centroid untuk himpunan sedang (berdasarkan amoniak)
-        centroid_tinggi = 75  # Centroid untuk himpunan tinggi (berdasarkan amoniak)
-        # print(self.basah + self.lembab + self.kering)
+        centroid_tds_rendah = 525  
+        centroid_tds_normal = 1225  
+        centroid_tds_tinggi = 1700
+
         # Hitung nilai crisp dengan metode centroid
-        nilai_crisp_kelembaban = (self.basah * centroid_basah + self.lembab * centroid_lembab + self.kering * centroid_kering) / (
-                    self.basah + self.lembab + self.kering)
-        nilai_crisp_amoniak = (self.normal * centroid_normal + self.sedang * centroid_sedang + self.tinggi * centroid_tinggi) / (
-                    self.normal + self.sedang + self.tinggi)
+        nilai_crisp_ph = (self.ph_tinggi * centroid_ph_tinggi + self.ph_normal * centroid_ph_normal + self.ph_rendah * centroid_ph_rendah) / (
+                    self.ph_tinggi + self.ph_normal + self.ph_rendah)
+        nilai_crisp_tds = (self.tds_rendah * centroid_tds_rendah + self.tds_normal * centroid_tds_normal + self.tds_tinggi * centroid_tds_tinggi) / (
+                    self.tds_rendah + self.tds_normal + self.tds_tinggi)
 
-        return nilai_crisp_kelembaban,nilai_crisp_amoniak   
+        return nilai_crisp_ph,nilai_crisp_tds   
 def on_connect(client, userdata, flags, rc):
     if rc == 0:
         print("Connected to broker")
-        client.publish("AIS","Launched...!!!")  # Subscribe ke topik "topic/test"
-        client.subscribe("tds_sensor")
-        client.subscribe("ph_sensor")
+        client.publish("menpro fuzzy","Launched...!!!")  # Subscribe ke topik "topic/test"
+        client.subscribe("menpro/esp32/ph_sensor")
+        client.subscribe("menpro/esp32/tds_sensor")
     else:
         print("Connection failed")
         
@@ -161,33 +192,25 @@ def on_message(client, userdata, msg):
         payload = msg.payload.decode()
         # print(type(topic))
         
-        if topic == 'ph_sensor':
+        if topic == 'menpro/esp32/ph_sensor':
             ph_value = payload
-        elif topic == 'tds_sensor':
+        elif topic == 'menpro/esp32/tds_sensor':
             tds_value = payload
         
         ph_value = float(ph_value)
         tds_value = float(tds_value)
         print(f'Data pH:{ph_value} | TDS:{tds_value}')
-        # data = json.loads(payload)
         
-        # temperature = data.get('temperature')
-        # humidity = data.get('humidity')
-        # ammonia = data.get('ammonia')
-        # client.publish('ais/temperature',temperature)
-        # client.publish('ais/humidity',humidity)
-        # client.publish('ais/ammonia',ammonia)
+        sistem_fuzzy = SistemFuzzy(ph_value, tds_value)  # Atur beberapa nilai tes
+        result_fuzzifikasi = sistem_fuzzy.fuzzifikasi()
+        result_inference = sistem_fuzzy.inference()
+        nilai_crisp_ph,nilai_tds = sistem_fuzzy.defuzzifikasi()
         
-        sistem_fuzzy = SistemFuzzy(3, 700)  # Atur beberapa nilai tes
-        print(sistem_fuzzy.fuzzifikasi())
-        print(sistem_fuzzy.inference())
-        # client.publish("ais/fuzzyfication",sistem_fuzzy.fuzzifikasi())
-        client.publish("inference_fuzzy",sistem_fuzzy.inference())
-        # nilai_crisp_kelembaban,nilai_crisp_amoniak = sistem_fuzzy.defuzzifikasi()
-        # client.publish("ais/defuzzyfication/kelembaban",nilai_crisp_kelembaban)
-        # client.publish("ais/defuzzyfication/ammonia",nilai_crisp_amoniak)
-        print("++++++++++++++++++++++++++++++++++++++++++++")
-        time.sleep(5)
+        client.publish("menpro/fuzzy/fuzzifikasi",result_fuzzifikasi)
+        client.publish("menpro/fuzzy/inference_fuzzy",result_inference)
+        client.publish("menpro/fuzzy/nilai_crisp_ph",nilai_crisp_ph)
+        client.publish("menpro/fuzzy/nilai_crisp_tds",nilai_tds)
+        print("")
     except Exception as e:
         # Jika payload tidak bisa diuraikan sebagai JSON, cetak sebagai string biasa
         print(f"Received String Payload: {e}", msg.payload)
