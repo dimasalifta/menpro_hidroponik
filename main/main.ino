@@ -16,7 +16,7 @@ DallasTemperature sensors(&oneWire);
 
 #include <Wire.h>             // Include the Wire library for I2C
 #include <PCF8574.h>          // Include the PCF8574 library
-#define PCF8574_ADDRESS 0x20  // Replace with your PCF8574 I2C address
+#define PCF8574_ADDRESS 0x20  // Replace withu your PCF8574 I2C address
 #include "setup_mqtt.h"
 
 #include <DHT.h>
@@ -211,7 +211,7 @@ void loop() {
   // readPH();
   // readTDS();
   // readFLOW();
-  send_mqtt(readPH(), readTDS(), readFLOW(), readDHThumi(), readDSB(), readDHTtempC());
+  send_mqtt(readPH(), readTDS(), readFLOW(), readDSB(), readDHTtempC(), readDHThumi());
   delay(1000);
   client.loop();
 }

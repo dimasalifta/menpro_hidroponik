@@ -6,13 +6,13 @@ const char* mqtt_server = "dimasalifta.tech";      // Ganti dengan alamat mqtt b
 const int mqtt_port = 1883;                        // Port default untuk mqtt
 const char* mqtt_username = "YOUR_MQTT_USERNAME";  // Ganti dengan username mqtt Anda (jika diperlukan)
 const char* mqtt_password = "YOUR_MQTT_PASSWORD";  // Ganti dengan password mqtt Anda (jika diperlukan)
-const char* topic = "ph_sensor";                   // Ganti dengan topik mqtt Anda
-const char* topic1 = "tds_sensor";                 // Ganti dengan topik mqtt Anda
-const char* topic2 = "suhu_c"; // Ganti dengan topik mqtt Anda
+const char* topic = "menpro/esp32/ph_sensor";                   // Ganti dengan topik mqtt Anda
+const char* topic1 = "menpro/esp32/tds_sensor";                 // Ganti dengan topik mqtt Anda
+const char* topic2 = "menpro/esp32/waterflow_sensor"; // Ganti dengan topik mqtt Anda
 // const char* topic3 = "suhu_f"; // Ganti dengan topik mqtt Anda
-const char* topic4 = "waterflow_sensor";  // Ganti dengan topik mqtt Anda
-const char* topic5 = "dht_sensor";  // Ganti dengan topik mqtt Anda
-const char* topic6 = "suhu_ruangan";  // Ganti dengan topik mqtt Anda
+const char* topic4 = "menpro/esp32/suhu_air";  // Ganti dengan topik mqtt Anda
+const char* topic5 = "menpro/esp32/suhu_lingkungan";  // Ganti dengan topik mqtt Anda
+const char* topic6 = "menpro/esp32/kelembaban";  // Ganti dengan topik mqtt Anda
 // Initialize the PCF8574 with the I2C address and appropriate SDA/SCL pins
 PCF8574 pcf8574(PCF8574_ADDRESS);  // Replace with your actual SDA and SCL pins
 WiFiClient espClient;
@@ -58,7 +58,7 @@ void connect_mqtt() {
   }
 }
 
-void send_mqtt(float ph, float tds, float flow, float dht, float dsb, float ruangan) {
+void send_mqtt(float ph, float tds, float flow, float dsb, float suhu, float kelembaban) {
   if (!client.connected()) {
     if (client.connect("ESP32Client")) {
       Serial.println("Connected to MQTT broker!");
@@ -71,10 +71,10 @@ void send_mqtt(float ph, float tds, float flow, float dht, float dsb, float ruan
   }
   client.publish(topic, String(ph).c_str());
   client.publish(topic1, String(tds).c_str());
-  client.publish(topic2, String(dsb).c_str());
-  client.publish(topic4, String(flow).c_str());
-  client.publish(topic5, String(dht).c_str());
-  client.publish(topic6, String(ruangan).c_str());  
+  client.publish(topic2, String(flow).c_str());
+  client.publish(topic4, String(dsb).c_str());
+  client.publish(topic5, String(suhu).c_str());
+  client.publish(topic6, String(kelembaban).c_str());  
 }
 
 void callback(char* topic, byte* message, unsigned int length) {
