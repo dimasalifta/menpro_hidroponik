@@ -25,8 +25,8 @@ void relay_begin() {
   pcf8574.write(3, HIGH);  // nutrisi b
   pcf8574.write(4, HIGH);  // terserah
   pcf8574.write(5, HIGH);  // dah
-  pcf8574.write(6, HIGH);  //
-  pcf8574.write(7, HIGH);  //
+  pcf8574.write(6, HIGH);  // isinya
+  pcf8574.write(7, HIGH);  // apa
 }
 void relay_ah(int in, bool stats) {
   pcf8574.write(in, stats);  // Turn pin in LOW

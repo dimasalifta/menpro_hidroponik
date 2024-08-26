@@ -208,9 +208,6 @@ void loop() {
   if (!client.connected()) {
     reconnect();
   }
-  // readPH();
-  // readTDS();
-  // readFLOW();
   send_mqtt(readPH(), readTDS(), readFLOW(), readDSB(), readDHTtempC(), readDHThumi());
   delay(1000);
   client.loop();
